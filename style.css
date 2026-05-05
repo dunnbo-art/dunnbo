@@ -506,8 +506,8 @@ button { font: inherit; cursor: pointer; border: none; background: none; }
 }
 .qi-card-mooro:hover { border-color: var(--gray-soft); transform: translateY(-6px) rotate(0.5deg); }
 .qi-card img {
-  width: 130px;
-  height: 130px;
+  width: 180px;
+  height: 180px;
   margin: 0 auto 0.5rem;
   object-fit: contain;
 }
@@ -1335,7 +1335,7 @@ button { font: inherit; cursor: pointer; border: none; background: none; }
     transform: rotate(90deg);
     margin: 0 auto;
   }
-  .qi-card img { width: 100px; height: 100px; }
+  .qi-card img { width: 140px; height: 140px; }
 
   .home-story { padding: 2rem 1.2rem; margin: 3rem auto; }
 
