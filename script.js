@@ -1,48 +1,135 @@
-# DUNNBO & MOORO 形象網站
+/* =========================================================
+   DUNNBO & MOORO — 互動腳本
+   - hash router (多頁切換)
+   - 行動選單
+   - Gallery 分類篩選
+   ========================================================= */
 
-兩隻兔子 DUNNBO（白白兔）和 MOORO（默默兔）的角色形象網站。
-參考 dinotaeng 的世界觀式品牌站做法，米色紙質風格 + 圓潤手作感。
+// 全部頁面
+const PAGES = {
+  'home': 'page-home',
+  'characters': 'page-characters',
+  'characters/dunnbo': 'page-dunnbo',
+  'characters/mooro': 'page-mooro',
+  'story': 'page-story',
+  'gallery': 'page-gallery',
+  'contact': 'page-contact',
+};
 
-## 檔案結構
-```
-dunnbo-site/
-├── index.html      主檔案（含 7 個頁面區塊）
-├── style.css       全部樣式 + RWD（斷點：1024px / 720px）
-├── script.js       Hash 路由 + 行動選單 + Gallery 篩選
-└── images/         35 張角色素材切圖
-```
+// 顯示對應頁面
+function showPage(hash) {
+  // 解析 hash
+  let key = (hash || '').replace(/^#/, '').trim();
+  if (!key || !PAGES[key]) key = 'home';
 
-## 頁面（透過 hash 路由切換）
-- `#home`                  首頁
-- `#characters`            角色列表
-- `#characters/dunnbo`     DUNNBO 角色頁
-- `#characters/mooro`      MOORO 角色頁
-- `#story`                 故事
-- `#gallery`               小劇場圖庫（可篩選 DUNNBO / MOORO）
-- `#contact`               聯絡頁
+  // 隱藏所有頁面
+  document.querySelectorAll('.page').forEach(p => {
+    p.hidden = true;
+  });
 
-## 本機預覽
-直接打開 `index.html` 即可。或啟動本地 server：
-```
-cd dunnbo-site
-python3 -m http.server 8000
-# 開啟 http://localhost:8000
-```
+  // 顯示目標頁面
+  const target = document.getElementById(PAGES[key]);
+  if (target) {
+    target.hidden = false;
+  }
 
-## 部署
-靜態網站可直接部署到任何靜態主機：
-- Netlify / Vercel：拖曳整個資料夾即可
-- GitHub Pages：push 到 repo 後啟用 Pages
-- Cloudflare Pages：connect git 或直接上傳
+  // 更新導覽 active 狀態（取主分類）
+  const mainCat = key.split('/')[0];
+  document.querySelectorAll('.nav-desktop a').forEach(a => {
+    const linkKey = (a.getAttribute('href') || '').replace(/^#/, '').split('/')[0];
+    a.classList.toggle('active', linkKey === mainCat);
+  });
 
-## 自訂
-- 換色：在 `style.css` 開頭的 `:root` 區段改 CSS 變數
-- 改文案：直接編輯 `index.html`
-- 加圖：丟進 `images/` 並在 HTML 中引用
-- 改字體：在 `index.html` <head> 換掉 Google Fonts URL，再改 `style.css` 的 `--font-display` / `--font-body` / `--font-script`
+  // 更新 title
+  const titles = {
+    'home': 'DUNNBO & MOORO — 兩隻兔子的小世界',
+    'characters': 'Characters — DUNNBO & MOORO',
+    'characters/dunnbo': 'DUNNBO 白白兔 — Characters',
+    'characters/mooro': 'MOORO 默默兔 — Characters',
+    'story': 'Story — DUNNBO & MOORO',
+    'gallery': 'Gallery — DUNNBO & MOORO',
+    'contact': 'Contact — DUNNBO & MOORO',
+  };
+  document.title = titles[key] || titles['home'];
 
-## 用到的字體
-- Fredoka（顯示英文，圓潤）
-- Caveat（手寫感點綴）
-- Zen Maru Gothic / Noto Sans TC（中文）
+  // 滾到頂端
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 
+  // 關閉行動選單
+  closeMobileNav();
+}
+
+// hash 變更
+window.addEventListener('hashchange', () => {
+  showPage(location.hash);
+});
+
+// 初始載入
+window.addEventListener('DOMContentLoaded', () => {
+  showPage(location.hash);
+  initMobileNav();
+  initGalleryFilter();
+});
+
+// ============= 行動版選單 =============
+const hamburger = document.querySelector('.hamburger');
+const navMobile = document.querySelector('.nav-mobile');
+
+function initMobileNav() {
+  if (!hamburger || !navMobile) return;
+  hamburger.addEventListener('click', () => {
+    const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
+    if (isOpen) {
+      closeMobileNav();
+    } else {
+      openMobileNav();
+    }
+  });
+
+  // 點選單連結後關閉
+  navMobile.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => closeMobileNav());
+  });
+}
+
+function openMobileNav() {
+  hamburger.setAttribute('aria-expanded', 'true');
+  navMobile.classList.add('open');
+  navMobile.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMobileNav() {
+  if (!hamburger) return;
+  hamburger.setAttribute('aria-expanded', 'false');
+  navMobile && navMobile.classList.remove('open');
+  navMobile && navMobile.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+// ============= Gallery 篩選 =============
+function initGalleryFilter() {
+  const buttons = document.querySelectorAll('.gf-btn');
+  const items = document.querySelectorAll('.g-item');
+  if (!buttons.length) return;
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filter = btn.getAttribute('data-filter');
+
+      // 更新按鈕 active
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // 篩選項目
+      items.forEach(item => {
+        const cat = item.getAttribute('data-cat');
+        if (filter === 'all' || cat === filter) {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+    });
+  });
+}
